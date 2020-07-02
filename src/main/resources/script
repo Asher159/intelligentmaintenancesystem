@@ -1,0 +1,23 @@
+beeline> !connect jdbc:hive2://192.168.1.212:10000
+
+create table intelligentmaintenancesystem(
+              number int, value String
+               )
+partitioned by (machine_singnal String, filename string)
+row format delimited fields terminated by '\t';
+
+create table intelligentmaintenancesystemORC(
+              number int, value String
+               )
+partitioned by (machine_singnal String, filename string)
+row format delimited fields terminated by '\t'
+stored as orc
+tblproperties ("orc.compress"="SNAPPY");
+
+
+insert into  intelligentmaintenancesystemORC partition(machine_singnal='MT2_ae_rms',filename ='MT2_ae_dataset_rms') select number,value from intelligentmaintenancesystem where machine_singnal='MT2_ae_rms' and filename ='MT2_ae_dataset_rms';
+
+truncate 'intelligentmaintenancesystem'
+scan 'intelligentmaintenancesystem'
+count 'intelligentmaintenancesystem'
+scan 'intelligentmaintenancesystem',{STARTROW => '0_MT1_x_in_0.6_0.002_f_2000-13-25-54', STOPROW  => '5880_MT1_x_in_0.6_0.002_f_2000-13-25-54'}
