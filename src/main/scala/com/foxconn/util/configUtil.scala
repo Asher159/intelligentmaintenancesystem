@@ -4,86 +4,126 @@ import java.text.SimpleDateFormat
 import java.util.{Date, ResourceBundle}
 
 import com.alibaba.fastjson.{JSON, JSONObject}
-/**
-  * 电商项目工具类
-  */
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Table}
+import org.apache.hadoop.hbase.mapreduce.TableOutputFormat
+import org.apache.spark.rdd.RDD
+
 object configUtil {
+  val configuration: Configuration = HBaseConfiguration.create() // 将自动读取hbase-site.xml中的配置
+  configuration.set(TableOutputFormat.OUTPUT_TABLE, "IMSPre-split")
+  val connection: Connection = ConnectionFactory.createConnection(configuration)
+  val table: Table = connection.getTable(TableName.valueOf("IMSPre-split"))
+
+  def main(args: Array[String]): Unit = {
+
+    //println(getValueFromConfig("jdbc.url"));
+    // println(getValueFromCondition("endDate"))
+    println(parseStringDateFromTs(formatString = "yyyy-MM-dd"))
+
+  }
+
+  def getConnection: Connection = {
+    connection
+  }
+
+  def getTable: Table = {
+    table
+  }
+
+  def getConfiguration: Configuration = {
+    configuration
+  }
 
 
-    def main(args: Array[String]): Unit = {
+  def clearUp(): Unit = {
+    table.close()
+    connection.close()
+  }
 
-        //println(getValueFromConfig("jdbc.url"));
-       // println(getValueFromCondition("endDate"))
-        println(parseStringDateFromTs(formatString="yyyy-MM-dd"))
+  // f为字符串插值符。函数把1转化为0000001
+  def transformInt(part: Int): String = {
+    f"$part%7d".replaceAll(" ", "0")
+  }
 
+  // 用于打印RDD分区元素个数
+  def printPartitionNum(value: RDD[_ <: Any]): Unit = {
+    value.mapPartitionsWithIndex {
+      (partIdx, iter) => {
+        val part_map = scala.collection.mutable.Map[String, Int]()
+        while (iter.hasNext) {
+          val part_name = "part_" + partIdx;
+          if (part_map.contains(part_name)) {
+            val ele_cnt = part_map(part_name)
+            part_map(part_name) = ele_cnt + 1
+          } else {
+            part_map(part_name) = 1
+          }
+          iter.next()
+        }
+        part_map.iterator
+      }
+    }.collect().foreach(println)
+  }
+
+  // 从一个Array中随机抽取num个元素
+  def getRandomNumElement(ints: Array[_ <: Any], num: Int): Array[_ <: Any] = {
+    import scala.util.Random
+    val arrayBuffer = ints.toBuffer
+    val length = ints.length - num
+    val rnd = new Random
+    for (_ <- 1 to length) {
+      val arrayBufferLength = arrayBuffer.length
+      arrayBuffer.remove(rnd.nextInt(arrayBufferLength))
     }
-
-    /**
-      * 将时间字符串转换为日期对象
-      * @return
-      */
-    def formatDateFromString( time:String, formatString : String = "yyyy-MM-dd HH:mm:ss" ): Date = {
-        val format = new SimpleDateFormat(formatString)
-        format.parse(time)
-    }
-
-    /**
-      * 将时间戳转换为日期字符串
-      */
-    def parseStringDateFromTs( ts : Long = System.currentTimeMillis, formatString : String = "yyyy-MM-dd HH:mm:ss" ): String = {
-        val format = new SimpleDateFormat(formatString)
-        format.format(new Date(ts))
-    }
-
-    /**
-      * 判断字符串是否非空，true,非空，false，空
-      * @param s
-      * @return
-      */
-    def isNotEmptyString( s : String ): Boolean = {
-        s != null && !"".equals(s.trim)
-    }
+    arrayBuffer.toArray
+  }
 
 
+  /**
+   * 将时间字符串转换为日期对象
+   */
+  def formatDateFromString(time: String, formatString: String = "yyyy-MM-dd HH:mm:ss"): Date = {
+    val format = new SimpleDateFormat(formatString)
+    format.parse(time)
+  }
 
-    def getValueFromCondition(key : String): String = {
-        val condition: String = getValueFromProperties("condition", "condition.params.json")
-        // 将JSON字符串进行转换
-        val jsonObj : JSONObject = JSON.parseObject(condition)
+  /**
+   * 将时间戳转换为日期字符串
+   */
+  def parseStringDateFromTs(ts: Long = System.currentTimeMillis, formatString: String = "yyyy-MM-dd HH:mm:ss"): String = {
+    val format = new SimpleDateFormat(formatString)
+    format.format(new Date(ts))
+  }
 
-        jsonObj.getString(key)
-    }
+  /**
+   * 判断字符串是否非空，true,非空，false，空
+   */
+  def isNotEmptyString(s: String): Boolean = {
+    s != null && !"".equals(s.trim)
+  }
 
-    def getValueFromConfig(key : String): String = {
-        getValueFromProperties("config", key);
-    }
+  // 从对应的json文件中读取配置
+  def getValueFromCondition(key: String): String = {
+    val condition: String = getValueFromProperties("condition", "condition.params.json")
+    // 将JSON字符串进行转换
+    val jsonObj: JSONObject = JSON.parseObject(condition)
+    jsonObj.getString(key)
+  }
 
-    /**
-      * 读取配置文件
-      * @param fileName 配置文件名称
-      * @param key 配置key
-      * @return
-      */
-    def getValueFromProperties(fileName : String, key : String): String = {
-        /* 读取配置文件
-        val stream: InputStream = Thread.currentThread().getContextClassLoader.getResourceAsStream(fileName)
+  //从config文件中读取配置
+  def getValueFromConfig(key: String): String = {
+    getValueFromProperties("config", key);
+  }
 
-        val properties = new java.util.Properties()
-        properties.load(stream)
-        properties.getProperty(key)
-        */
+  /**
+   * 读取配置文件
+   */
+  def getValueFromProperties(fileName: String, key: String): String = {
+    // 使用国际化（i18n）组件读取配置文件，只能读取properties文件
+    val bundle = ResourceBundle.getBundle(fileName);
+    bundle.getString(key)
 
-        // 使用第三方的组件，读取配置文件
-        /*
-new FileBasedConfigurationBuilder[FileBasedConfiguration](classOf[PropertiesConfiguration])
-        .configure(new Parameters().properties().setFileName(propertiesName)).getConfiguration
-    }
-
-         */
-
-        // 使用国际化（i18n）组件读取配置文件，只能读取properties文件
-        val bundle = ResourceBundle.getBundle(fileName);
-        bundle.getString(key)
-
-    }
+  }
 }

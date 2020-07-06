@@ -2,30 +2,29 @@ package com.foxconn.hbaseOperate
 
 import java.util
 
+import com.foxconn.util.configUtil
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.{Cell, CellScanner, CellUtil, HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Get, ResultScanner, Scan, Table}
-import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
-import org.apache.hadoop.hbase.filter.FilterList.Operator
-import org.apache.hadoop.hbase.filter.{BinaryComparator, FilterList, RowFilter}
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat
 import org.apache.hadoop.hbase.util.Bytes
 
 import scala.collection.mutable.ArrayBuffer
 
 object readHbase {
-  val configuration: Configuration = HBaseConfiguration.create()
-  configuration.set(TableOutputFormat.OUTPUT_TABLE, "intelligentmaintenancesystem")
-  val connection: Connection = ConnectionFactory.createConnection(configuration)
-  val table: Table = connection.getTable(TableName.valueOf("intelligentmaintenancesystem"))
+  val connection: Connection = configUtil.getConnection
+  val table: Table = configUtil.getTable
+  val configuration: Configuration = configUtil.getConfiguration
+
 
   def main(args: Array[String]): Unit = {
     //    val tuples = scanDataFromHTable("inner", "MT1_x_feed_25600")
     val tuples1 = getDataFromRowNumber("MT1_x_in_0.6_0.002_f_2000-13-25-54", 1, 10)
     tuples1.foreach(println)
-    table.close()
-    connection.close()
+    configUtil.clearUp()
   }
+
+
 
   // 输入；列簇和列名获取对应所有数据 返回（number,value）
   def scanDataFromHTable(columnFamily: String, column: String): List[(Int, Double)] = {

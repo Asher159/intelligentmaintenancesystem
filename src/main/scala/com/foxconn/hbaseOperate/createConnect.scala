@@ -89,7 +89,8 @@ object createConnect {
   }
 
   def main(args: Array[String]): Unit = {
-//    createTable("intelligentmaintenancesystem",Array("normal","inner","outer"))
+    createTable("intelligentmaintenancesystem",Array("normal","inner","outer"))
+//    createTable("IMSPre-split",Array("normal","inner","outer"))
     //insertTable("1", "i", "age", "22")
     //scanDataFromHTable("i", "age")
 //    deleteRecord("1","i","name")
