@@ -4,10 +4,6 @@ import java.io.File
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-//import com.jmatio.io.MatFileReader
-//import com.jmatio.types.MLArray
-//import com.jmatio.types.MLDouble
-//import org.ujmp.core.Matrix
 import org.ujmp.jmatio.ImportMatrixMAT
 
 object readDirectoryAndMatAndIntoHive {
@@ -25,7 +21,7 @@ object readDirectoryAndMatAndIntoHive {
     spaceAngle
   }
 
-
+  // 遍历文件目录，返回所有单个文件的完全路径
   def getFiles1(dir: File): Array[File] = {
     dir.listFiles.filter(_.isFile) ++
       dir.listFiles.filter(_.isDirectory).flatMap(getFiles1)
@@ -43,7 +39,7 @@ object readDirectoryAndMatAndIntoHive {
     val sql = "insert into  intelligentmaintenancesystem partition(machine_singnal='%s',filename ='%s') select * from addhive"
     val sqlText = String.format(sql, partition1, partition2)
     println(sqlText)
-//    sparkSession.sql(sqlText)
+    //    sparkSession.sql(sqlText)
   }
 
   def main(args: Array[String]): Unit = {

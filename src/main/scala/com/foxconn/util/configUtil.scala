@@ -6,15 +6,17 @@ import java.util.{Date, ResourceBundle}
 import com.alibaba.fastjson.{JSON, JSONObject}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
-import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Table}
-import org.apache.hadoop.hbase.mapreduce.TableOutputFormat
+import org.apache.hadoop.hbase.client.{Admin, Connection, ConnectionFactory, RegionLocator, Table}
 import org.apache.spark.rdd.RDD
 
 object configUtil {
-  val configuration: Configuration = HBaseConfiguration.create() // 将自动读取hbase-site.xml中的配置
-  configuration.set(TableOutputFormat.OUTPUT_TABLE, "IMSPre-split")
-  val connection: Connection = ConnectionFactory.createConnection(configuration)
-  val table: Table = connection.getTable(TableName.valueOf("IMSPre-split"))
+  private val configuration: Configuration = HBaseConfiguration.create() // 将自动读取hbase-site.xml中的配置
+  private val tableName: TableName = TableName.valueOf("IMSPre-split")
+  private val connection: Connection = ConnectionFactory.createConnection(configuration)
+  private val table: Table = connection.getTable(tableName)
+  private val admin: Admin = connection.getAdmin
+  private val regionLocator: RegionLocator = connection.getRegionLocator(tableName)
+
 
   def main(args: Array[String]): Unit = {
 
@@ -36,8 +38,18 @@ object configUtil {
     configuration
   }
 
+  def getAdmin: Admin = {
+    admin
+  }
 
-  def clearUp(): Unit = {
+  def getRegionLocator: RegionLocator = {
+    regionLocator
+  }
+
+  def clearUp(): Unit
+  = {
+    regionLocator.close()
+    admin.close()
     table.close()
     connection.close()
   }

@@ -23,7 +23,7 @@ I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axi
 I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_2000-9-36-26.mat		MT1_x_normal_f_2000-9-36-26
 I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_2500-9-37-39.mat		MT1_x_normal_f_2500-9-37-39
 I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_3000-9-38-22.mat		MT1_x_normal_f_3000-9-38-22
-I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_4000-9-38-59.mat		MT1_x_normal_f_4000-9-38-59
+I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_4000-9-38-59.mat		MT1_x_normal_f_4000-9-38-59IMSPre-split
 I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_5000-9-39-55.mat		MT1_x_normal_f_5000-9-39-55
 I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_6000-9-40-45.mat		MT1_x_normal_f_6000-9-40-45
 I:\后期\训练模型\模型训练文件\MT1_x_feed\原始数据_mat\x_feed_axis_mat\normal\MT1_x_normal_f_7000-9-41-26.mat		MT1_x_normal_f_7000-9-41-26
@@ -248,5 +248,7 @@ I:\后期\训练模型\模型训练文件\TG_y_feed\原始数据_mat\TG_y_feed_m
 I:\后期\训练模型\模型训练文件\TG_y_feed\原始数据_mat\TG_y_feed_mat\normal\normal_feed_6000.mat		normal_feed_6000
 I:\后期\训练模型\模型训练文件\TG_y_feed\原始数据_mat\TG_y_feed_mat\normal\normal_feed_7000.mat		normal_feed_7000
 I:\后期\训练模型\模型训练文件\TG_y_feed\原始数据_mat\TG_y_feed_mat\normal\normal_feed_8000.mat		normal_feed_8000
+
+
 
 

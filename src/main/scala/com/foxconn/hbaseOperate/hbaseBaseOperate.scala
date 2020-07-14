@@ -2,6 +2,7 @@ package com.foxconn.hbaseOperate
 
 import java.io.IOException
 
+import com.foxconn.util.configUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 import org.apache.hadoop.hbase.client._
@@ -9,14 +10,13 @@ import org.apache.hadoop.hbase.util.Bytes
 
 /**
  * 从hbase中增删改查数据
- *
  */
-object createConnect {
+object hbaseBaseOperate {
 
-  val configuration: Configuration = HBaseConfiguration.create()
-  val connection: Connection = ConnectionFactory.createConnection(configuration)
+  val configuration: Configuration = configUtil.getConfiguration
+  val connection: Connection = configUtil.getConnection
   val admin: Admin = connection.getAdmin
-  val table: Table = connection.getTable(TableName.valueOf("sk:test1"))
+  val table: Table = configUtil.getTable
 
   //创建一个hbase表
   def createTable(tableName: String, columnFamilys: Array[String]): Unit = {
