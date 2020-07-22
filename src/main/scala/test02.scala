@@ -1,31 +1,34 @@
 import java.io.{File, FileWriter}
 
 import com.foxconn.util
-import com.foxconn.util.getFilePath
+import com.foxconn.util.{configUtil, getFilePath}
 import com.foxconn.util.readDirectoryAndMatAndIntoHive.getFiles1
 import com.foxconn.util.readDirectoryAndMatAndIntoHive.getMatData
 import com.foxconn.util.configUtil.parseStringDateFromTs
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.KeyValue
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 
 object test02 {
   def main(args: Array[String]): Unit = {
-    //    getRandomNumElement(Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), 3).foreach(println)
-    //    val writer = new FileWriter(new File("test.txt"), true)
-    //    writer.write(parseStringDateFromTs(System.currentTimeMillis)+"\n")
-    //    val files = getFiles1(new File("I:\\后期\\训练模型\\模型训练文件\\MT2_x_feed\\原始数据_mat\\MT2_X_and_y_feed_data\\outer-0.6-0.04_criticalG\\outer-0.6-0.04_criticalG_unload_15000rpm-11-55-16.mat"))
-    //    files.foreach(println)
-    getMatData(new File("I:\\后期\\训练模型\\模型训练文件\\TG_y_feed\\原始数据_mat\\TG_y_feed_mat\\inner_feed_1000.mat"))
+    val kv = new KeyValue(Bytes.toBytes("Rownumber"), Bytes.toBytes("family"), Bytes.toBytes("column"), Bytes.toBytes("value"))
+    println(kv)
+    println(kv.toString.split("/")(0))
+    val sparkConf = new SparkConf().setAppName("kafkaTOHive").setMaster("local[*]")
+    sparkConf.set("spark.streaming.kafka.maxRatePerPartition", "25600") //设定对目标topic每个partition每秒钟拉取的数据条数,我的topic IMS有12个分区
+    sparkConf.set("spark.streaming.backpressure.enabled", "true") //开启背压机制
+    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    //这里先生成sparkSession ，然后生成sc，在生成ssc,这用就能保证sparkSession、sc、ssc三者共存，不然会报多个sc异常错误
+    val sparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
 
-    //    for (dir0 <- getFilePath.getPathAndArgs) {
-    //      val files = getFiles1(new File(dir0._1)) // 文件名作为第二个分区
-    //      util.configUtil.getRandomNumElement(files, 100).foreach {
-    //        filesPath => {
-    //          writer.write(filesPath.toString+"\n")
-    //        }
-    //      }
-    //    }
-    //    writer.write("\n\n")
-    //    writer.close()
+    val pathString = "hdfs://192.168.1.211:8020/tmp/hbase/"
+    configUtil.deletHdfsPath(sparkSession, pathString,true)
   }
+
+
 }
 

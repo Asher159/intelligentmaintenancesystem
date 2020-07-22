@@ -5,9 +5,11 @@ import java.util.{Date, ResourceBundle}
 
 import com.alibaba.fastjson.{JSON, JSONObject}
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
 import org.apache.hadoop.hbase.client.{Admin, Connection, ConnectionFactory, RegionLocator, Table}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 
 object configUtil {
   private val configuration: Configuration = HBaseConfiguration.create() // 将自动读取hbase-site.xml中的配置
@@ -136,6 +138,26 @@ object configUtil {
     // 使用国际化（i18n）组件读取配置文件，只能读取properties文件
     val bundle = ResourceBundle.getBundle(fileName);
     bundle.getString(key)
+  }
 
+  def getFileSeparator: String = {
+    var fileSeparator: String = ""
+    if (System.getProperty("file.separator") == "\\") { // 判断操作系统
+      fileSeparator = "\\\\"
+    }
+    else {
+      fileSeparator = "/"
+    }
+    fileSeparator
+  }
+
+
+  def deletHdfsPath(sparkSession: SparkSession, pathString: String, boolean: Boolean): Unit = {
+    val path = new Path(pathString)
+    val hadoopConf = sparkSession.sparkContext.hadoopConfiguration
+    val hdfs = path.getFileSystem(hadoopConf)
+    if (hdfs.exists(path)) {
+      hdfs.delete(path, boolean) //容许递归删除
+    }
   }
 }

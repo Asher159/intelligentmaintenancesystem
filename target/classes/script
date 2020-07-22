@@ -17,10 +17,11 @@ tblproperties ("orc.compress"="SNAPPY");
 
 insert into  intelligentmaintenancesystemORC partition(machine_singnal='MT2_ae_rms',filename ='MT2_ae_dataset_rms') select number,value from intelligentmaintenancesystem where machine_singnal='MT2_ae_rms' and filename ='MT2_ae_dataset_rms';
 
-
+sudo su hdfs -l -c 'hdfs dfsadmin -safemode leave'
 truncate 'intelligentmaintenancesystem'
 scan 'intelligentmaintenancesystem'
 count 'intelligentmaintenancesystem'
+hbase thrift start
 
 create 'IMSPre-split','normal','inner','outer',SPLITS => ['0500000','1000000','1500000','2000000','2500000','3000000','3500000','4000000','4500000','5000000','5500000','6000000','6500000','7000000','7500000','8000000','8500000','9000000','9500000']
 disable 'IMSPre-split'
@@ -28,15 +29,9 @@ drop 'IMSPre-split'
 truncate 'IMSPre-split'
 count 'IMSPre-split'
 
-MT1_x_feed 全插
-
-MT2——micphone 的inner 全插 nomal如下
-noamal_slightG_al7075_10000rpm_feed2500_depth0.1_width3-9-24-13.mat
-noamal_slightG_al7075_11000rpm_feed2500_depth0.1_width3-9-28-21.mat
-noamal_slightG_al7075_12000rpm_feed2500_depth0.1_width3-9-32-23.mat
-noamal_slightG_al7075_13000rpm_feed2500_depth0.1_width3-9-36-41.mat
-noamal_slightG_al7075_14000rpm_feed2500_depth0.1_width3-9-41-32.mat
-noamal_slightG_al7075_15000rpm_feed2500_depth0.1_width3-9-45-48.mat
-noamal_slightG_al7075_6000rpm_feed2500_depth0.1_width3-9-10-19.mat
-noamal_slightG_al7075_7000rpm_feed2500_depth0.1_width3-9-15-06.mat
-noamal_slightG_al7075_8000rpm_feed2500_depth0.1_width3-9-50-13.mat
+./kafka-topics.sh --zookeeper 192.168.1.211:2181 --create --topic IMS --partitions 8 --replication-factor 2
+./kafka-topics.sh --zookeeper 192.168.1.212:2181 --list
+./kafka-topics.sh --zookeeper 192.168.1.212:2181 --describe --topic  IMS
+./kafka-console-producer.sh  --broker-list 192.168.1.213:6667 --topic IMS
+./kafka-console-consumer.sh  --bootstrap-server 192.168.1.212:6667 -from-beginning --topic IMS --from-beginning
+./kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic IMS

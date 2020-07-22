@@ -319,6 +319,7 @@ public class hbaseopt {
 
     // 关闭连接
     public void cleanUp() throws Exception {
+
         connection.close();
     }
 

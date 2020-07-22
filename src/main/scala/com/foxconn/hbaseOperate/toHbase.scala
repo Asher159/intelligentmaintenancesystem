@@ -36,7 +36,6 @@ object toHbase {
     val sparkConf = new SparkConf().setAppName("toHbase").setMaster("local[*]")
     sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     sparkConf.set("spark.kryoserializer.buffer.max", "128m")
-
     /**
      * 在使用splitAfterRDD方法时，只用到了configuration ,所以configuration里面要设置好table，
      * 并且设置好mapreduce.output.fileoutputformat.outputdir，否则报java.lang.IllegalArgumentException: Can not create a Path from a null string
@@ -68,14 +67,8 @@ object toHbase {
     val files = getFiles1(new File(dir))
     // 过滤掉其中的非mat文件  并随机选取对应个数的文件数进行操作 当 num 大于 文件个数即对所有文件操作
     val filterFiles = util.configUtil.getRandomNumElement(files.filter(file => file.toString.endsWith(".mat")), 100) // 过滤掉其中的非mat文件
-    var filename: String = ""
     filterFiles.foreach(x => {
-      if (System.getProperty("file.separator") == "\\") { // 判断操作系统
-        filename = x.toString.split("\\\\").filter(path => path.endsWith(".mat"))(0).replace(".mat", "") // 文件名 + 数据序号  作为hbase中Cell的 keyRow
-      }
-      else {
-        filename = x.toString.split("/").filter(path => path.endsWith(".mat"))(0).replace(".mat", "")
-      }
+      val  filename = x.toString.split(configUtil.getFileSeparator).filter(path => path.endsWith(".mat"))(0).replace(".mat", "")
       val value = sparkSession.sparkContext.makeRDD(getMatData(new File(x.toString)), 4) // 分区避免ooM
       val valueRDD = value.zipWithIndex().map {
         case (value, num) =>
