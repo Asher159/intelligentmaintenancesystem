@@ -35,3 +35,5 @@ count 'IMSPre-split'
 ./kafka-console-producer.sh  --broker-list 192.168.1.213:6667 --topic IMS
 ./kafka-console-consumer.sh  --bootstrap-server 192.168.1.212:6667 -from-beginning --topic IMS --from-beginning
 ./kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic IMS
+
+./spark-submit --master yarn --executor-cores 2  --num-executors 3  --executor-memory 1g  --driver-memory 1g --deploy-mode client  --executor-cores 2  --conf spark.serializer="org.apache.spark.serializer.KryoSerializer"       --conf spark.streaming.kafka.maxRatePerPartition="7000"   --conf spark.streaming.backpressure.enabled="true"               --class  com.foxconn.realTime.kafakToHbase  tmp/intelligentmaintenancesystem-1.0-SNAPSHOT-jar-with-dependencies.jar
