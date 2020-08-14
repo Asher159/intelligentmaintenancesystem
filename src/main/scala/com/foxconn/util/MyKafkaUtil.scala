@@ -6,10 +6,16 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
 
+import org.apache.kafka.clients.producer.Callback
+import org.apache.kafka.clients.producer.RecordMetadata
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 
 object MyKafkaUtil {
 
   val broker_list: String = configUtil.getValueFromConfig("kafka.broker.list")
+  val consumer_group_id:String = configUtil.getValueFromConfig("consumer.group.id")
 
   // kafka消费者配置
   val kafkaParam = Map(
@@ -17,7 +23,7 @@ object MyKafkaUtil {
     "key.deserializer" -> classOf[StringDeserializer],
     "value.deserializer" -> classOf[StringDeserializer],
     //用于标识这个消费者属于哪个消费团体
-    "group.id" -> "IMS10",
+    "group.id" -> consumer_group_id,
     //如果没有初始化偏移量或者当前的偏移量不存在任何服务器上，可以使用这个配置属性
     //可以使用这个配置，latest自动重置偏移量为最新的偏移量
     "auto.offset.reset" -> "earliest",
@@ -37,13 +43,6 @@ object MyKafkaUtil {
     val dStream = KafkaUtils.createDirectStream[String, String](ssc, LocationStrategies.PreferConsistent, ConsumerStrategies.Subscribe[String, String](Array(topic), kafkaParam))
     dStream
   }
-
-
-  import org.apache.kafka.clients.producer.Callback
-  import org.apache.kafka.clients.producer.RecordMetadata
-  import org.slf4j.Logger
-  import org.slf4j.LoggerFactory
-
 
   /**
    * kafka回调函数
