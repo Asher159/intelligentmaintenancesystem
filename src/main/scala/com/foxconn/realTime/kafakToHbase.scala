@@ -17,23 +17,34 @@ import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.streaming.kafka010.{CanCommitOffsets, HasOffsetRanges}
 
 object kafakToHbase {
+  def main(args: Array[String]): Unit = {
+    new Thread(new AA).start() //最后开启kafkaTOHbase线程
+  }
+}
+
+
+class AA extends Runnable {
   private val table: Table = configUtil.getTable
   private val configuration: Configuration = configUtil.getConfiguration
   private val admin: Admin = configUtil.getAdmin
   private val regionlocator: RegionLocator = configUtil.getRegionLocator
 
-  def main(args: Array[String]): Unit = {
-    val sparkConf = new SparkConf().setAppName("kafkaTOHive").setMaster("local[*]")
-    sparkConf.set("spark.streaming.kafka.maxRatePerPartition", "7000") //设定对目标topic每个partition每秒钟拉取的数据条数,我的topic IMS有12个分区  // 太多会导致宽带受不起
-    sparkConf.set("spark.streaming.backpressure.enabled", "true") //开启背压机制
-    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+  override def run(): Unit = {
+    val sparkConf = new SparkConf().setAppName(configUtil.getValueFromConfig("tohbase.appname")).setMaster(configUtil.getValueFromConfig("tohbase.spark.master"))
+    sparkConf.setAll(scala.collection.Traversable(
+      ("spark.streaming.kafka.maxRatePerPartition", configUtil.getValueFromConfig("tohbase.spark.streaming.kafka.maxRatePerPartition")),
+      ("spark.streaming.backpressure.enabled", configUtil.getValueFromConfig("tohbase.spark.streaming.backpressure.enabled")),
+      ("spark.serializer", configUtil.getValueFromConfig("tohbase.spark.serializer"))))
+//    val sparkConf = new SparkConf().setAppName("kafkaTOHive").setMaster("local[*]")
+//    sparkConf.set("spark.streaming.kafka.maxRatePerPartition", "7000") //设定对目标topic每个partition每秒钟拉取的数据条数,我的topic IMS有12个分区  // 太多会导致宽带受不起
+//    sparkConf.set("spark.streaming.backpressure.enabled", "true") //开启背压机制
+//    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     //这里先生成sparkSession ，然后生成sc，在生成ssc,这用就能保证sparkSession、sc、ssc三者共存，不然会报多个sc异常错误
     val sparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
-//    val sparkSession = SparkSession.builder().getOrCreate()
+    //    val sparkSession = SparkSession.builder().getOrCreate()
     val sc = sparkSession.sparkContext
-    val ssc = new StreamingContext(sc, Seconds(40)) //这里可按频率数设置
-
-    val topic = "IMS"
+    val ssc = new StreamingContext(sc, Seconds(configUtil.getValueFromConfig("consumer.tohbase.sparkStreaming.batch.time").toLong)) //这里可按频率数设置
+    val topic = configUtil.getValueFromConfig("consumer.tohbase.topic")
     val kafkaDStream: InputDStream[ConsumerRecord[String, String]] = MyKafkaUtil.getKafkaStream(topic, ssc)
     //    .transform(rdd=> rdd.sortBy(record=> record.key()+record.value()))
     kafkaDStream.foreachRDD(rdd => {
@@ -46,9 +57,9 @@ object kafakToHbase {
       })
       val pathString = "hdfs://192.168.1.211:8020/tmp/hbase/" + System.currentTimeMillis().toString
       val path = new Path(pathString)
-      println(valueRDD.take(1).foreach(record => println(record._2)))
+//      println(valueRDD.take(1).foreach(record => println(record._2)))
       //       删除在hdfs上保存的hfile源文件
-      //      configUtil.deletHdfsPath(sparkSession, "hdfs://192.168.1.211:8020/tmp/hbase/", true)
+      configUtil.deletHdfsPath(sparkSession, "hdfs://192.168.1.211:8020/tmp/hbase/", boolean = true)
       //       保存Hfile to HDFS
       valueRDD.saveAsNewAPIHadoopFile(pathString, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], configuration)
       // Bulk写Hfile to HBase
@@ -62,5 +73,4 @@ object kafakToHbase {
     ssc.start()
     ssc.awaitTermination()
   }
-
 }

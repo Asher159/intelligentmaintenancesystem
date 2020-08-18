@@ -52,11 +52,11 @@ class DD extends Runnable {
         str.append("\t")
         str.append(line)
         line = reader.readLine()
-        println(str.toString + "\t" + i)
-//        kafkaProducer.send(new ProducerRecord[String, String](topic, configUtil.transformInt(i), str.toString), new DataCallback(System.currentTimeMillis(), str.toString))
+        //        println(str.toString + "\t" + i)
+        kafkaProducer.send(new ProducerRecord[String, String](topic, configUtil.transformInt(i), str.toString), new DataCallback(System.currentTimeMillis(), str.toString))
         i = i + 1
       }
-      println(i)
+      //      println(i)
     } catch {
       case e: IOException =>
         e.printStackTrace()
