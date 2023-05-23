@@ -93,7 +93,7 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.19.3</version>
+            <version>3.41.2.2</version>
         </dependency>
 
         <!--        //mysql8.0.17的引入会与hbase1.1.2中Protobuf冲突-->
